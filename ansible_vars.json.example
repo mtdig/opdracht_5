@@ -1,0 +1,24 @@
+{
+  "mysql_root_password": "WIJZIG_MIJ",
+  "db_wp_password": "WIJZIG_MIJ",
+  "wp_admin_password": "WIJZIG_MIJ",
+  "ansible_become_password": "osboxes.org",
+
+  "wp_db_name": "wordpress",
+  "wp_db_user": "wpuser",
+
+  "wp_admin_user": "osboxes",
+  "wp_admin_email": "jeroen.vanrenterghem@student.hogent.be",
+  "wp_title": "SELab Opdracht 5 - Groep 99",
+  "wp_locale": "nl_BE",
+  "certbot_staging": true,
+  "enable_vaultwarden": false,
+  "vaultwarden_admin_token": "",
+  "enable_tech_snake": false,
+
+  "luanti_server_name": "VoxeLibre Server - Groep 99",
+  "luanti_ssh_host_alias": "luanti",
+
+  "ssh_host_alias": "azosboxes",
+  "ssh_key": "~/.ssh/id_ed25519_hogent"
+}

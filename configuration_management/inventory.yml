@@ -1,0 +1,12 @@
+all:
+  children:
+    docker_host:
+      hosts:
+        wordpress-vm:
+          ansible_host: 51.12.80.175
+          ansible_user: osboxes
+    luanti:
+      hosts:
+        luanti-vm:
+          ansible_host: 20.91.198.17
+          ansible_user: osboxes

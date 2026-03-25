@@ -1,0 +1,57 @@
+# =============================================================================
+# HTTP → HTTPS redirect + ACME challenge
+# =============================================================================
+
+# WordPress + Portainer + Tech Snake
+<VirtualHost *:80>
+    ServerName {{ wp_domain }}
+{% if external_fqdn | default('') | length > 0 %}
+    ServerAlias {{ external_fqdn }}
+{% endif %}
+
+    # Let's Encrypt ACME challenge
+    DocumentRoot /var/www/html
+    <Directory /var/www/html>
+        AllowOverride None
+        Require all granted
+    </Directory>
+
+    # Redirect alles behalve ACME naar HTTPS
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge/
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+</VirtualHost>
+
+{% if enable_vaultwarden | default(false) | bool and vaultwarden_fqdn | default('') | length > 0 %}
+# Vaultwarden
+<VirtualHost *:80>
+    ServerName {{ vaultwarden_fqdn }}
+
+    DocumentRoot /var/www/html
+    <Directory /var/www/html>
+        AllowOverride None
+        Require all granted
+    </Directory>
+
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge/
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+</VirtualHost>
+{% endif %}
+
+{% if portainer_fqdn | default('') | length > 0 %}
+# Portainer
+<VirtualHost *:80>
+    ServerName {{ portainer_fqdn }}
+
+    DocumentRoot /var/www/html
+    <Directory /var/www/html>
+        AllowOverride None
+        Require all granted
+    </Directory>
+
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge/
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+</VirtualHost>
+{% endif %}

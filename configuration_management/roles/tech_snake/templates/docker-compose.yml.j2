@@ -1,0 +1,8 @@
+---
+services:
+  tech-snake:
+    image: mtdig/tech-snake:latest
+    container_name: tech-snake
+    restart: unless-stopped
+    ports:
+      - "8082:8080"

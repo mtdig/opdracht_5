@@ -1,0 +1,14 @@
+services:
+  luanti:
+    image: lscr.io/linuxserver/minetest:5.10.0
+    container_name: luanti
+    restart: always
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Brussels
+      - CLI_ARGS=--gameid voxelibre
+    ports:
+      - "0.0.0.0:30000:30000/udp"
+    volumes:
+      - /dockers/luanti/data:/config/.minetest

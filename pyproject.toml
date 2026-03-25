@@ -1,0 +1,9 @@
+[project]
+name = "opdracht5"
+version = "0.1.0"
+description = "IaC for containerized WordPress/Vaultwarden/Portainer + Luanti/VoxeLibre on Azure"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "ansible>=13.4.0",
+]

@@ -1,0 +1,85 @@
+# =============================================================================
+# SSL VirtualHosts - beheerd door Ansible (NIET door certbot)
+# =============================================================================
+
+# SSL hardening (inline - certbot certonly legt geen options-ssl-apache.conf aan)
+SSLProtocol             all -SSLv2 -SSLv3 -TLSv1 -TLSv1.1
+SSLCipherSuite          ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
+SSLHonorCipherOrder     off
+SSLSessionTickets       off
+SSLOptions +StrictRequire
+
+<IfModule mod_ssl.c>
+
+# WordPress + Tech Snake
+<VirtualHost *:443>
+    ServerName {{ wp_domain }}
+{% if external_fqdn | default('') | length > 0 %}
+    ServerAlias {{ external_fqdn }}
+{% endif %}
+
+    SSLEngine On
+    SSLCertificateFile    {{ ssl_cert_path }}
+    SSLCertificateKeyFile {{ ssl_key_path }}
+
+    ProxyPreserveHost On
+    RequestHeader set X-Forwarded-Proto "https"
+    RewriteEngine On
+
+{% if enable_tech_snake | default(false) | bool %}
+    # Tech Snake
+    ProxyPass        /snake/ http://127.0.0.1:8082/
+    ProxyPassReverse /snake/ http://127.0.0.1:8082/
+    RedirectMatch 301 ^/snake$ /snake/
+{% endif %}
+
+    # WordPress (catch-all)
+    ProxyPass        / http://127.0.0.1:8080/
+    ProxyPassReverse / http://127.0.0.1:8080/
+</VirtualHost>
+
+{% if portainer_fqdn | default('') | length > 0 %}
+# =============================================================================
+# Portainer (eigen subdomain)
+# =============================================================================
+<VirtualHost *:443>
+    ServerName {{ portainer_fqdn }}
+
+    SSLEngine On
+    SSLCertificateFile    {{ ssl_cert_path }}
+    SSLCertificateKeyFile {{ ssl_key_path }}
+
+    ProxyPreserveHost On
+    RequestHeader set X-Forwarded-Proto "https"
+
+    ProxyPass        / http://127.0.0.1:9000/
+    ProxyPassReverse / http://127.0.0.1:9000/
+</VirtualHost>
+{% endif %}
+
+{% if enable_vaultwarden | default(false) | bool and vaultwarden_fqdn | default('') | length > 0 %}
+# =============================================================================
+# Vaultwarden (eigen subdomain)
+# =============================================================================
+<VirtualHost *:443>
+    ServerName {{ vaultwarden_fqdn }}
+
+    SSLEngine On
+    SSLCertificateFile    {{ ssl_cert_path }}
+    SSLCertificateKeyFile {{ ssl_key_path }}
+
+    ProxyPreserveHost On
+    RequestHeader set X-Forwarded-Proto "https"
+    RewriteEngine On
+
+    # WebSocket
+    RewriteCond %{HTTP:Upgrade} =websocket [NC]
+    RewriteRule ^/notifications/hub(.*)  ws://127.0.0.1:8081/notifications/hub$1 [P,L]
+
+    # Vaultwarden (root)
+    ProxyPass        / http://127.0.0.1:8081/
+    ProxyPassReverse / http://127.0.0.1:8081/
+</VirtualHost>
+{% endif %}
+
+</IfModule>

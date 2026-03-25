@@ -1,0 +1,167 @@
+---
+# docker_compose - Deploy alle docker-compose stacks naar /dockers/{service}
+
+# =========================================================================
+# WordPress + MariaDB (gecombineerde stack)
+# =========================================================================
+- name: WordPress directories aanmaken
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - /dockers/wordpress
+    - /dockers/wordpress/db-data
+    - /dockers/wordpress/html
+
+- name: WordPress docker-compose.yml aanmaken (MariaDB + WordPress)
+  template:
+    src: wordpress-compose.yml.j2
+    dest: /dockers/wordpress/docker-compose.yml
+    mode: "0644"
+  register: wp_compose
+
+- name: WordPress stack starten
+  shell: docker compose up -d --remove-orphans
+  args:
+    chdir: /dockers/wordpress
+  when: wp_compose.changed
+
+- name: WordPress stack draaien
+  shell: docker compose up -d
+  args:
+    chdir: /dockers/wordpress
+  changed_when: false
+
+- name: Wacht tot MariaDB klaar is
+  shell: docker compose exec -T mariadb healthcheck.sh --connect --innodb_initialized
+  args:
+    chdir: /dockers/wordpress
+  register: db_health
+  until: db_health.rc == 0
+  retries: 30
+  delay: 5
+  changed_when: false
+
+- name: Wacht tot WordPress klaar is
+  uri:
+    url: http://127.0.0.1:8080/wp-login.php
+    status_code: [200, 302, 301]
+    follow_redirects: none
+  register: wp_health
+  until: wp_health.status in [200, 302, 301]
+  retries: 30
+  delay: 5
+
+# =========================================================================
+# Vaultwarden container
+# =========================================================================
+- name: Vaultwarden directory aanmaken
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - /dockers/vaultwarden
+    - /dockers/vaultwarden/data
+  when: enable_vaultwarden | default(false) | bool
+
+- name: argon2 CLI installeren
+  apt:
+    name: argon2
+    state: present
+  when:
+    - enable_vaultwarden | default(false) | bool
+    - vaultwarden_admin_token | default('') | length > 0
+
+- name: Vaultwarden admin token hashen met Argon2
+  shell: |
+    SALT=$(openssl rand -base64 16)
+    echo -n '{{ vaultwarden_admin_token }}' | argon2 "$SALT" -id -m 16 -t 3 -p 4 -l 32 -e
+  register: vw_hash_result
+  changed_when: false
+  no_log: true
+  when:
+    - enable_vaultwarden | default(false) | bool
+    - vaultwarden_admin_token | default('') | length > 0
+
+- name: Gehashte admin token opslaan
+  set_fact:
+    vaultwarden_admin_token_hash: "{{ vw_hash_result.stdout_lines | last }}"
+  when:
+    - enable_vaultwarden | default(false) | bool
+    - vaultwarden_admin_token | default('') | length > 0
+  no_log: true
+
+- name: Vaultwarden docker-compose.yml aanmaken
+  template:
+    src: vaultwarden-compose.yml.j2
+    dest: /dockers/vaultwarden/docker-compose.yml
+    mode: "0644"
+  register: vw_compose
+  when: enable_vaultwarden | default(false) | bool
+
+- name: Vaultwarden container starten
+  shell: docker compose up -d --remove-orphans
+  args:
+    chdir: /dockers/vaultwarden
+  when:
+    - enable_vaultwarden | default(false) | bool
+    - vw_compose.changed | default(false)
+
+- name: Vaultwarden container draaien
+  shell: docker compose up -d
+  args:
+    chdir: /dockers/vaultwarden
+  changed_when: false
+  when: enable_vaultwarden | default(false) | bool
+
+- name: Wacht tot Vaultwarden klaar is
+  uri:
+    url: http://127.0.0.1:8081/
+    status_code: [200, 404]
+  register: vw_health
+  until: vw_health.status in [200, 404]
+  retries: 15
+  delay: 5
+  when: enable_vaultwarden | default(false) | bool
+
+# =========================================================================
+# Portainer container
+# =========================================================================
+- name: Portainer directory aanmaken
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - /dockers/portainer
+    - /dockers/portainer/data
+
+- name: Portainer docker-compose.yml aanmaken
+  template:
+    src: portainer-compose.yml.j2
+    dest: /dockers/portainer/docker-compose.yml
+    mode: "0644"
+  register: portainer_compose
+
+- name: Portainer container starten
+  shell: docker compose up -d --remove-orphans
+  args:
+    chdir: /dockers/portainer
+  when: portainer_compose.changed
+
+- name: Portainer container draaien
+  shell: docker compose up -d
+  args:
+    chdir: /dockers/portainer
+  changed_when: false
+
+- name: Wacht tot Portainer klaar is
+  uri:
+    url: http://127.0.0.1:9000/
+    status_code: [200, 302]
+  register: portainer_health
+  until: portainer_health.status in [200, 302]
+  retries: 15
+  delay: 5

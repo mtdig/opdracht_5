@@ -1,0 +1,29 @@
+---
+# portainer_agent - Portainer Agent voor remote Docker management
+# Draait op de Luanti VM; Portainer CE op de Docker host verbindt via privé IP
+# Vereist: docker_host role moet VOOR deze role draaien
+
+- name: Portainer Agent directory aanmaken
+  file:
+    path: /dockers/portainer-agent
+    state: directory
+    mode: "0755"
+
+- name: Portainer Agent docker-compose.yml aanmaken
+  template:
+    src: docker-compose.yml.j2
+    dest: /dockers/portainer-agent/docker-compose.yml
+    mode: "0644"
+  register: agent_compose
+
+- name: Portainer Agent container starten
+  shell: docker compose up -d --remove-orphans
+  args:
+    chdir: /dockers/portainer-agent
+  when: agent_compose.changed
+
+- name: Portainer Agent container draaien
+  shell: docker compose up -d
+  args:
+    chdir: /dockers/portainer-agent
+  changed_when: false

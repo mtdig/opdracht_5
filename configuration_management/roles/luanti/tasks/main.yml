@@ -1,0 +1,62 @@
+---
+# luanti - Luanti/Minetest server met VoxeLibre (Docker container)
+# Vereist: docker_host role moet VOOR deze role draaien
+
+- name: Luanti dependencies installeren
+  apt:
+    name:
+      - unzip
+    state: present
+
+- name: Luanti directories aanmaken
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - /dockers/luanti
+    - /dockers/luanti/data
+    - /dockers/luanti/data/games
+    - /dockers/luanti/data/worlds
+
+- name: Docker Compose bestand voor Luanti aanmaken
+  template:
+    src: docker-compose.yml.j2
+    dest: /dockers/luanti/docker-compose.yml
+    mode: "0644"
+  register: luanti_compose
+
+- name: Luanti minetest.conf aanmaken
+  template:
+    src: minetest.conf.j2
+    dest: /dockers/luanti/data/minetest.conf
+    mode: "0644"
+  register: luanti_conf
+
+- name: VoxeLibre (MineClone2) downloaden
+  shell: |
+    if [ ! -d /dockers/luanti/data/games/voxelibre ]; then
+      cd /dockers/luanti/data/games
+      curl -sL -o voxelibre.zip 'https://content.luanti.org/packages/Wuzzy/mineclone2/releases/34397/download/'
+      unzip -o voxelibre.zip -d .
+      rm -f voxelibre.zip
+      echo "CHANGED"
+    else
+      echo "EXISTS"
+    fi
+  register: voxelibre_download
+  changed_when: "'CHANGED' in voxelibre_download.stdout"
+
+- name: Luanti containers starten
+  shell: docker compose up -d --remove-orphans
+  args:
+    chdir: /dockers/luanti
+  when: luanti_compose.changed or luanti_conf.changed or voxelibre_download.changed
+
+- name: Luanti containers draaien
+  shell: docker compose up -d
+  args:
+    chdir: /dockers/luanti
+  changed_when: false
+
+

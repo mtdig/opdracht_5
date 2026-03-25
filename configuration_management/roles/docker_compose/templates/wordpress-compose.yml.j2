@@ -1,0 +1,38 @@
+services:
+  mariadb:
+    image: mariadb:11
+    container_name: mariadb
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: "{{ mysql_root_password }}"
+      MARIADB_DATABASE: "{{ wp_db_name }}"
+      MARIADB_USER: "{{ wp_db_user }}"
+      MARIADB_PASSWORD: "{{ db_wp_password }}"
+    ports:
+      - "127.0.0.1:3306:3306"
+    volumes:
+      - /dockers/wordpress/db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  wordpress:
+    image: wordpress:latest
+    container_name: wordpress
+    restart: always
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    environment:
+      WORDPRESS_DB_HOST: "mariadb:3306"
+      WORDPRESS_DB_NAME: "{{ wp_db_name }}"
+      WORDPRESS_DB_USER: "{{ wp_db_user }}"
+      WORDPRESS_DB_PASSWORD: "{{ db_wp_password }}"
+      WORDPRESS_TABLE_PREFIX: "wp_"
+    ports:
+      - "127.0.0.1:8080:80"
+    volumes:
+      - /dockers/wordpress/html:/var/www/html

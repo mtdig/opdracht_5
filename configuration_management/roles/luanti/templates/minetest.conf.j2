@@ -1,0 +1,28 @@
+# Luanti / Minetest server configuratie - beheerd door Ansible
+# =============================================================
+
+# Server instellingen
+server_name = {{ luanti_server_name | default('VoxeLibre Server - Groep 99') }}
+server_description = {{ luanti_server_description | default('SELab Opdracht 5 - VoxeLibre/Luanti dedicated server') }}
+server_address =
+server_port = 30000
+max_users = {{ luanti_max_users | default(10) }}
+creative_mode = {{ luanti_creative_mode | default('false') }}
+enable_damage = {{ luanti_enable_damage | default('true') }}
+enable_pvp = {{ luanti_enable_pvp | default('true') }}
+
+# Wereld
+default_game = mineclone2
+motd = {{ luanti_motd | default('Welkom op de VoxeLibre server van Groep 99!') }}
+
+# Beveiliging
+default_privs = interact, shout
+enable_rollback_recording = true
+disallow_empty_password = true
+secure.enable_security = true
+
+# Performance
+dedicated_server_step = 0.09
+active_block_range = 4
+max_block_send_per_client = 40
+max_simultaneous_block_sends_per_client = 10

@@ -1,0 +1,156 @@
+---
+# reverse_proxy - Apache als reverse proxy voor alle Docker containers + Let's Encrypt
+
+- name: Apache en certbot installeren
+  apt:
+    name:
+      - apache2
+      - certbot
+      - python3-certbot-apache
+      - dnsutils
+    state: present
+    update_cache: true
+
+- name: Webroot directory voor ACME challenges aanmaken
+  file:
+    path: /var/www/html/.well-known/acme-challenge
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: "0755"
+
+- name: Apache modules inschakelen
+  apache2_module:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - rewrite
+    - ssl
+    - proxy
+    - proxy_http
+    - proxy_wstunnel
+    - headers
+  notify: Apache herstarten
+
+- name: Oude certbot-beheerde SSL vhost verwijderen
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/apache2/sites-enabled/docker-proxy-le-ssl.conf
+    - /etc/apache2/sites-available/docker-proxy-le-ssl.conf
+  notify: Apache herstarten
+
+- name: Apache vhost aanmaken (HTTP + SSL)
+  template:
+    src: vhost.conf.j2
+    dest: /etc/apache2/sites-available/docker-proxy.conf
+  notify: Apache herstarten
+
+- name: Proxy site inschakelen
+  file:
+    src: /etc/apache2/sites-available/docker-proxy.conf
+    dest: /etc/apache2/sites-enabled/docker-proxy.conf
+    state: link
+  notify: Apache herstarten
+
+- name: Standaard site uitschakelen
+  file:
+    path: /etc/apache2/sites-enabled/000-default.conf
+    state: absent
+  notify: Apache herstarten
+
+- name: Standaard SSL site uitschakelen
+  file:
+    path: /etc/apache2/sites-enabled/default-ssl.conf
+    state: absent
+  notify: Apache herstarten
+
+- name: Apache beveiligingsconfiguratie aanmaken
+  template:
+    src: security.conf.j2
+    dest: /etc/apache2/conf-available/security-hardening.conf
+  notify: Apache herstarten
+
+- name: Apache beveiligingsconfiguratie inschakelen
+  file:
+    src: /etc/apache2/conf-available/security-hardening.conf
+    dest: /etc/apache2/conf-enabled/security-hardening.conf
+    state: link
+  notify: Apache herstarten
+
+- name: Handlers nu uitvoeren (Apache moet draaien voor certbot)
+  meta: flush_handlers
+
+- name: Wacht tot DNS voor {{ wp_domain }} resolveerbaar is
+  command: dig +short {{ wp_domain }}
+  register: dns_check
+  until: dns_check.stdout | trim | length > 0
+  retries: 15
+  delay: 10
+  changed_when: false
+
+- name: Wacht tot DNS voor {{ external_fqdn }} resolveerbaar is
+  command: dig +short {{ external_fqdn }}
+  register: ext_dns_check
+  until: ext_dns_check.stdout | trim | length > 0
+  retries: 15
+  delay: 10
+  changed_when: false
+  when: external_fqdn | default('') | length > 0
+
+- name: Wacht tot DNS voor {{ vaultwarden_fqdn | default('') }} resolveerbaar is
+  command: dig +short {{ vaultwarden_fqdn }}
+  register: vw_dns_check
+  until: vw_dns_check.stdout | trim | length > 0
+  retries: 15
+  delay: 10
+  changed_when: false
+  when: vaultwarden_fqdn | default('') | length > 0
+
+- name: Wacht tot DNS voor {{ portainer_fqdn | default('') }} resolveerbaar is
+  command: dig +short {{ portainer_fqdn }}
+  register: pt_dns_check
+  until: pt_dns_check.stdout | trim | length > 0
+  retries: 15
+  delay: 10
+  changed_when: false
+  when: portainer_fqdn | default('') | length > 0
+
+- name: Certbot domeinen samenstellen
+  set_fact:
+    certbot_domains: >-
+      -d {{ wp_domain }}{{ ' -d ' + external_fqdn if external_fqdn | default('') | length > 0 else '' }}{{ ' -d ' + vaultwarden_fqdn if vaultwarden_fqdn | default('') | length > 0 else '' }}{{ ' -d ' + portainer_fqdn if portainer_fqdn | default('') | length > 0 else '' }}
+
+- name: Let's Encrypt certificaat aanvragen via certbot (certonly)
+  command:
+    cmd: >-
+      certbot certonly --webroot
+      -w /var/www/html
+      {{ certbot_domains }}
+      --non-interactive
+      --agree-tos
+      --email {{ certbot_email | default('jeroen.vanrenterghem@student.hogent.be') }}
+      --keep-until-expiring
+      --expand
+      {{ '--staging' if certbot_staging | default(false) | bool else '' }}
+  register: certbot_result
+  changed_when: "'no action taken' not in certbot_result.stdout"
+
+- name: Certbot certificaatpad opslaan
+  set_fact:
+    ssl_cert_path: "/etc/letsencrypt/live/{{ wp_domain }}/fullchain.pem"
+    ssl_key_path: "/etc/letsencrypt/live/{{ wp_domain }}/privkey.pem"
+
+- name: Apache SSL vhost aanmaken met certificaat
+  template:
+    src: vhost-ssl.conf.j2
+    dest: /etc/apache2/sites-available/docker-proxy-ssl.conf
+  notify: Apache herstarten
+
+- name: SSL site inschakelen
+  file:
+    src: /etc/apache2/sites-available/docker-proxy-ssl.conf
+    dest: /etc/apache2/sites-enabled/docker-proxy-ssl.conf
+    state: link
+  notify: Apache herstarten

@@ -1,0 +1,36 @@
+---
+# tech_snake – mtdig/tech-snake als Docker container
+
+- name: Tech Snake directory aanmaken
+  file:
+    path: /dockers/tech-snake
+    state: directory
+    mode: "0755"
+
+- name: Tech Snake docker-compose.yml aanmaken
+  template:
+    src: docker-compose.yml.j2
+    dest: /dockers/tech-snake/docker-compose.yml
+    mode: "0644"
+  register: snake_compose
+
+- name: Tech Snake container starten
+  shell: docker compose up -d --remove-orphans
+  args:
+    chdir: /dockers/tech-snake
+  when: snake_compose.changed
+
+- name: Tech Snake container draaien
+  shell: docker compose up -d
+  args:
+    chdir: /dockers/tech-snake
+  changed_when: false
+
+- name: Wacht tot Tech Snake klaar is
+  uri:
+    url: http://127.0.0.1:8082/
+    status_code: [200, 304]
+  register: snake_health
+  until: snake_health.status in [200, 304]
+  retries: 15
+  delay: 5

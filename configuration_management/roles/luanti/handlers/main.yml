@@ -1,0 +1,5 @@
+---
+- name: Luanti herstarten
+  shell: docker compose restart
+  args:
+    chdir: /dockers/luanti
