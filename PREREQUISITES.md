@@ -9,8 +9,8 @@ Gedetailleerde installatie-instructies per besturingssysteem voor alle tools die
   - [Overzicht](#overzicht)
   - [Waarom uv voor Ansible?](#waarom-uv-voor-ansible)
   - [Windows](#windows)
-    - [Optie 1 — WSL 2 (aanbevolen)](#optie-1--wsl-2-aanbevolen)
-    - [Optie 2 — Native Windows](#optie-2--native-windows)
+    - [Optie 1 - WSL 2 (aanbevolen)](#optie-1--wsl-2-aanbevolen)
+    - [Optie 2 - Native Windows](#optie-2--native-windows)
       - [Terraform](#terraform)
       - [Azure CLI](#azure-cli)
       - [Python](#python)
@@ -26,8 +26,8 @@ Gedetailleerde installatie-instructies per besturingssysteem voor alle tools die
     - [Eenmalig (zonder flakes)](#eenmalig-zonder-flakes)
   - [FreeBSD](#freebsd)
   - [Config-starter (TUI)](#config-starter-tui)
-    - [Optie 1 — Download van GitHub Releases (geen Go nodig)](#optie-1--download-van-github-releases-geen-go-nodig)
-    - [Optie 2 — Zelf compileren (Go ≥ 1.21 vereist)](#optie-2--zelf-compileren-go--121-vereist)
+    - [Optie 1 - Download van GitHub Releases (geen Go nodig)](#optie-1--download-van-github-releases-geen-go-nodig)
+    - [Optie 2 - Zelf compileren (Go ≥ 1.21 vereist)](#optie-2--zelf-compileren-go--121-vereist)
     - [Gebruik](#gebruik)
 
 ---
@@ -42,7 +42,7 @@ Gedetailleerde installatie-instructies per besturingssysteem voor alle tools die
 | **uv** | latest | Python dependency beheer (installeert Ansible in venv) |
 | **Make** | any | Commando-orkestrator (Makefile) |
 | **SSH** | any | Verbinding met de VM |
-| **Go** | ≥ 1.21 | _Optioneel_ — alleen nodig om config-starter zelf te compileren |
+| **Go** | ≥ 1.21 | _Optioneel_ - alleen nodig om config-starter zelf te compileren |
 
 ---
 
@@ -50,10 +50,10 @@ Gedetailleerde installatie-instructies per besturingssysteem voor alle tools die
 
 Ansible is een Python pakket. Je kunt het installeren met `pip install ansible`, maar dat heeft nadelen:
 
-1. **Systeemvervuiling** — `pip install --user ansible` of `sudo pip install ansible` dumpt honderden bestanden in je systeem-Python. Bij een OS-upgrade of een ander project dat Ansible nodig heeft met een andere versie krijg je conflicten.
-2. **Reproduceerbaarheid** — dit project heeft een `pyproject.toml` met een vastgepinde Ansible versie (`>=13.4.0`). Met `uv sync` krijgt iedereen exact dezelfde versie in een geïsoleerde virtuele omgeving.
-3. **Snelheid** — `uv` is geschreven in Rust en installeert pakketten 10-100× sneller dan `pip`.
-4. **Geen activatie nodig** — `uv run ansible-playbook ...` draait automatisch in de juiste venv zonder dat je die hoeft te activeren.
+1. **Systeemvervuiling** - `pip install --user ansible` of `sudo pip install ansible` dumpt honderden bestanden in je systeem-Python. Bij een OS-upgrade of een ander project dat Ansible nodig heeft met een andere versie krijg je conflicten.
+2. **Reproduceerbaarheid** - dit project heeft een `pyproject.toml` met een vastgepinde Ansible versie (`>=13.4.0`). Met `uv sync` krijgt iedereen exact dezelfde versie in een geïsoleerde virtuele omgeving.
+3. **Snelheid** - `uv` is geschreven in Rust en installeert pakketten 10-100× sneller dan `pip`.
+4. **Geen activatie nodig** - `uv run ansible-playbook ...` draait automatisch in de juiste venv zonder dat je die hoeft te activeren.
 
 Concreet: `uv sync` leest `pyproject.toml`, maakt een `.venv/` map aan in de projectroot, installeert Ansible daarin, en het `Makefile` gebruikt `uv run` om alles in die venv uit te voeren. Je systeem-Python blijft schoon.
 
@@ -63,7 +63,7 @@ Concreet: `uv sync` leest `pyproject.toml`, maakt een `.venv/` map aan in de pro
 
 > **Aanbevolen:** Gebruik [WSL 2](https://learn.microsoft.com/windows/wsl/install) met Ubuntu en volg dan de [Debian / Ubuntu](#linux--debian--ubuntu) instructies. Dat is veruit het makkelijkst.
 
-### Optie 1 — WSL 2 (aanbevolen)
+### Optie 1 - WSL 2 (aanbevolen)
 
 ```powershell
 # Installeer WSL (PowerShell als administrator)
@@ -72,7 +72,7 @@ wsl --install -d Ubuntu
 # Start Ubuntu, volg dan de Debian/Ubuntu instructies hieronder
 ```
 
-### Optie 2 — Native Windows
+### Optie 2 - Native Windows
 
 #### Terraform
 
@@ -159,7 +159,7 @@ uv sync
 ## Linux - Debian / Ubuntu
 
 ```bash
-# Terraform — officiële HashiCorp repository
+# Terraform - officiële HashiCorp repository
 sudo apt-get update && sudo apt-get install -y gnupg software-properties-common
 wget -O- https://apt.releases.hashicorp.com/gpg | \
   gpg --dearmor | sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg > /dev/null
@@ -193,7 +193,7 @@ uv sync
 # Terraform
 sudo pacman -S terraform
 
-# Azure CLI (via AUR — gebruik yay, paru, of een andere AUR helper)
+# Azure CLI (via AUR - gebruik yay, paru, of een andere AUR helper)
 yay -S azure-cli
 
 # Python, make, SSH
@@ -242,7 +242,7 @@ Dit project bevat een `flake.nix` die automatisch Python en uv beschikbaar maakt
 ### Met flakes (aanbevolen)
 
 ```bash
-# Start de dev shell — installeert Python, uv, en draait uv sync automatisch
+# Start de dev shell - installeert Python, uv, en draait uv sync automatisch
 nix develop
 
 # Terraform en Azure CLI via je system configuration.nix:
@@ -307,7 +307,7 @@ uv sync
 
 De interactieve configuratie generator helpt je om `terraform.tfvars.json` en `ansible_vars.json` aan te maken.
 
-### Optie 1 — Download van GitHub Releases (geen Go nodig)
+### Optie 1 - Download van GitHub Releases (geen Go nodig)
 
 Haal de laatste binary voor jouw platform op van de [releases pagina](https://github.com/mtdig/az-wp-inst/releases/latest):
 
@@ -325,7 +325,7 @@ chmod +x config-starter-linux-amd64
 ./config-starter-linux-amd64
 ```
 
-### Optie 2 — Zelf compileren (Go ≥ 1.21 vereist)
+### Optie 2 - Zelf compileren (Go ≥ 1.21 vereist)
 
 ```bash
 # Go installeren (als je het nog niet hebt)

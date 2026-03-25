@@ -88,7 +88,7 @@ type AnsibleVars struct {
 func findRoot() string {
 	dir, _ := os.Getwd()
 	for {
-		// zoek naar pyproject.toml — uniek voor de projectroot
+		// zoek naar pyproject.toml - uniek voor de projectroot
 		if _, err := os.Stat(filepath.Join(dir, "pyproject.toml")); err == nil {
 			return dir
 		}
