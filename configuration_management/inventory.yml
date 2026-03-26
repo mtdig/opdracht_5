@@ -3,10 +3,10 @@ all:
     docker_host:
       hosts:
         wordpress-vm:
-          ansible_host: 51.12.80.175
+          ansible_host: 20.240.49.74
           ansible_user: osboxes
     luanti:
       hosts:
         luanti-vm:
-          ansible_host: 20.91.198.17
+          ansible_host: 20.240.135.246
           ansible_user: osboxes

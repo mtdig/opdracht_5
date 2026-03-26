@@ -2,6 +2,7 @@
 # =============================================================
 
 # Server instellingen
+name = moi
 server_name = {{ luanti_server_name | default('VoxeLibre Server - Groep 99') }}
 server_description = {{ luanti_server_description | default('SELab Opdracht 5 - VoxeLibre/Luanti dedicated server') }}
 server_address =
@@ -11,15 +12,26 @@ creative_mode = {{ luanti_creative_mode | default('false') }}
 enable_damage = {{ luanti_enable_damage | default('true') }}
 enable_pvp = {{ luanti_enable_pvp | default('true') }}
 
+# Mobs
+mobs_spawn = true
+only_peaceful_mobs = true
+mob_difficulty = 1.0
+mobs_griefing = true
+
 # Wereld
 default_game = mineclone2
 motd = {{ luanti_motd | default('Welkom op de VoxeLibre server van Groep 99!') }}
 
-# Beveiliging
+# Beveiliging - interact=bouwen/graven, shout=chatten, basic_privs=basis commando's
 default_privs = interact, shout
+basic_privs = interact, shout
 enable_rollback_recording = true
 disallow_empty_password = true
 secure.enable_security = true
+
+# Chat
+strip_color_codes = true
+chat_message_max_size = 500
 
 # Performance
 dedicated_server_step = 0.09
