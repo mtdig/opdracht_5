@@ -69,7 +69,6 @@ Volledig geautomatiseerde deployment van **gedockeriseerde services** op **twee 
 | SSH sleutelpaar | Standaard: `~/.ssh/id_ed25519_hogent` |
 | [Make](https://makefiletutorial.com/) | Makefile command runner |
 
-> **📖 Gedetailleerde installatie-instructies** per OS (Windows/WSL, macOS, Debian, Arch, Gentoo, NixOS, FreeBSD): zie **[PREREQUISITES.md](PREREQUISITES.md)**
 
 Op **NixOS** kan je de dev shell opstarten met `nix develop`.
 
@@ -83,8 +82,8 @@ az login
 cp terraform.tfvars.json.example terraform.tfvars.json
 cp ansible_vars.json.example ansible_vars.json
 
-# 3. Vul de configuratie in via de TUI config generator:
-cd config-starter && make run
+# 3. Vul de configuratie in via de TUI config generator
+...
 
 # 4. Deploy alles (provisioning + configuratie beide VMs)
 make all
@@ -103,7 +102,7 @@ Voer `make` of `make help` uit om alle targets te zien:
 | `make apply` | Alle Azure infrastructuur aanmaken (beide VMs) |
 | `make configure` | Ansible playbook uitvoeren op beide VMs (leest automatisch Terraform outputs) |
 | `make all` | **`apply` + `configure`** in één keer |
-| `make info` | Huidige Terraform outputs tonen (IPs, FQDNs, …) |
+| `make info` | Huidige Terraform outputs tonen (IPs, FQDNs, ...) |
 | `make destroy` | Alle Azure resources verwijderen |
 | `make destroy-vm` | Enkel de Docker host VM verwijderen |
 | `make destroy-luanti` | Enkel de Luanti VM verwijderen |
@@ -143,7 +142,7 @@ make all SSH_KEY=~/.ssh/mijn_andere_sleutel
 make all
   │
   ├─ make apply            ← Terraform maakt Azure resources aan (2 VMs in gedeeld VNet)
-  │   └─ outputs: public_ip_address, luanti_public_ip_address, luanti_private_ip, …
+  │   └─ outputs: public_ip_address, luanti_public_ip_address, luanti_private_ip, ...
   │
   └─ make configure        ← Ansible configureert beide VMs in één run
       ├─ genereert dynamische inventory vanuit Terraform outputs
@@ -182,7 +181,7 @@ Apache draait als reverse proxy (via Docker host) en stuurt verkeer door naar de
 
 | Container | Image | Poort | Beschrijving |
 |---|---|---|---|
-| **Minetest** | `linuxserver/minetest:5.10.0` | 30000/udp | VoxeLibre (Minetest) game server |
+| **Minetest** | `linuxserver/minetest:5.10.0` | 30000/udp | VoxeLibre (Minetest) game server, let op:  **UDP** |
 | **Portainer Agent** | `portainer/agent:latest` | 9001/tcp | Maakt remote management via Portainer mogelijk |
 
 ## Portainer
@@ -198,7 +197,7 @@ Toegang via: `https://<dns-label>-portainer.groep99.be`
 
 ## Luanti / VoxeLibre
 
-Een dedicated ARM64 VM (4GB RAM) draait een [Luanti](https://www.luanti.org/) (voorheen Minetest) server met de [VoxeLibre](https://content.luanti.org/packages/Wuzzy/mineclone2/) game. VoxeLibre wordt automatisch gedownload van ContentDB en geïnstalleerd.
+Een dedicated ARM64 VM (4GB RAM) draait een [Luanti](https://www.luanti.org/) (ex-Minetest) server met de [VoxeLibre](https://content.luanti.org/packages/Wuzzy/mineclone2/) game. VoxeLibre wordt automatisch gedownload van ContentDB en geïnstalleerd.
 
 - **Server**: `<luanti-dns-label>.swedencentral.cloudapp.azure.com:30000`
 - **Game**: VoxeLibre (Minecraft-achtig, open source)
@@ -206,7 +205,7 @@ Een dedicated ARM64 VM (4GB RAM) draait een [Luanti](https://www.luanti.org/) (v
 
 ## Optionele componenten
 
-Deze componenten zijn standaard uitgeschakeld en kunnen via `ansible_vars.json` (of de TUI config generator) ingeschakeld worden:
+Deze componenten (ook containers) zijn standaard uitgeschakeld en kunnen via `ansible_vars.json` (of de TUI config generator) ingeschakeld worden:
 
 | Component | Flag | Beschrijving |
 |---|---|---|
